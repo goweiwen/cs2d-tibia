@@ -1,0 +1,33 @@
+0.5
+- fixed npcs buying items at ridiculous prices (price = item id instead of actual price)
+
+0.4
+- added possibility for multiple monster spawns, for example, sandshrew
+	note: the spawnchance for them are not very intuitive, so spawnchance of {5, 20} will result in (5+20)/2 = 12.5 instead of 25. (if my maths is correct)
+	note: several of the monster's attributes are modified, including spawn1 and spawn2 being removed and merged into spawn with map name and multiple areas, and spawnchance being an array with map name and multiple chances
+- added compatibility for multiple maps, and defaulted values to default map for backwards compatibility.
+- added non-pvp zones, preventing pvp within the area
+- added no-monster zones, preventing monsters spawning/entering/attacking inside the area
+- fixed many minor bugs that i did not realise
+- added (fixed?) colour-coding texts, e.g. "^0STOP RIGHT THERE CRIMINAL SCUM!" will yell that out in white (255255255). colour codes can be from 0-9 and a-z (case insensitive)
+- fixed bug that allowed dropping of non-integer values of money
+- fixed an exploit that could(?) crash server
+
+0.3
+-fixed (hopefully) the problem with new wrapper for this script
+-re-did the way items on ground were rendered, should fix the bug where games with lots of items on the ground cause excessive lag and dcs
+-at the same time also added a MAXHEIGHT field in config, where you can set how high item stacks can be.
+-moved documentation into archive to remove clutter here
+-that should be all
+
+NOTE: for those updating from the previous version, only function.lua, config.lua and server.lua has been modified. (the last 2 being minor modifications)
+
+0.2
+updated for CS2D 0.1.1.8
+-uses the included timer instead of my own hacky timer system
+-added !m to spawn monsters
+-fixed gastly being unable to use its attack (no one noticed it anyway)
+-some other small fixes
+
+0.1
+-uploaded

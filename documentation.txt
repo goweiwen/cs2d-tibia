@@ -1,0 +1,268 @@
+--[[ CS2DTibia script documentation
+:cookie: Cookie for reading documentation! :cookie:
+ADMIN
+admin.lua
+
+adminList = {62098; 1, 2}
+list of admins. use a comma or semicolon to separate the admins
+
+CONFIG
+config.lua
+documentation for config.lua is relocated to config.lua
+
+ITEMS
+items.lua
+
+name: 
+name of the item
+compulsory
+e.g. name = "apple", 
+
+plural:
+plural name of the item
+optional
+e.g. plural = "torches", 
+
+article:
+article of the item
+optional
+e.g. article = "an", 
+
+desc:
+description of the item
+optional
+e.g. desc = "No visible worms.", 
+
+r, g, b:
+colour. red, green and blue respectively.
+optional
+e.g. r = 255, g = 0, b = 0, 
+
+action:
+actions. if more than one, use a table.
+optional
+e.g. action = "eat", 
+action = {"wear","check time"}, 
+
+func:
+function to call when action is chosen. (parameters: id, itemslot, itemid and equip)
+(equip is a boolean true or false, true when the item is in the equipment and false when it is in the inventory.)
+compulsory if action is specified.
+e.g. func = eat,
+func = {equip, function(id) msg2(id,ITEMS[3].desc) end},
+
+fimage:
+floor image path.
+compulsory
+e.g. fimage = "gfx/weiwen/apple.png", 
+
+offsetx:
+floor image x axis offset.
+optional
+e.g. offsetx = 6,
+
+offsety:
+floor image y axis offset.
+optional
+e.g. offsety = 17,
+
+blend:
+image blend.
+optional
+e.g. blend = 1, 
+
+static:
+image does not rotate with player.
+optional
+e.g. static = 1, 
+
+slot:
+slot to put the item in when equipped.
+compulsory, only if func is equip.
+e.g. slot = 8, 
+
+eimage:
+equipped image path.
+optional, only if func is equip.
+e.g. eimage = "gfx/sprites/flare3.bmp",
+
+escalex:
+equipped image x axis scale.
+optional, only if func is equip.
+e.g. escalex = 3, 
+
+escaley:
+equipped image y axis scale.
+optional, only if func is equip.
+e.g. escaley = 3, 
+
+atk:
+equipped attack addition.
+optional, only if func is equip.
+e.g. atk = 0.25, 
+
+def:
+equipped defence addition.
+optional, only if func is equip.
+e.g. def = 0.1, 
+
+speed:
+equipped speedmod addition.
+optional, only if func is equip.
+e.g. speed = -1,
+
+equip:
+when equipped, give the player this weapon.
+optional, only if func is equip.
+e.g. equip = 69,
+
+twohand:
+two handed weapon?
+optional, only if func is equip.
+e.g. twohand = true, 
+
+level:
+level requirement.
+optional, only if func is equip.
+e.g. level = 5, 
+
+ground:
+equipped image is a floor image?
+optional, only if func is equip.
+e.g. ground = true,
+
+food:
+used with eat action, the function will be called when eating with no parameters.
+optional
+e.g. food = function() return math.random(10,20) end, -- heals a random number from 10 to 20.
+
+
+
+NPCs
+npcs.lua
+
+[NPCID] = {<npcname>, pos = {x pos in pixels, y pos in pixels}, rot = rotation in degrees, trade = {{itemid (negative for selling), price}, {itemid (negative for selling), price}}, greet = <greeting message>, bye = <farewell message>, image = <npc image path, prefixed with "gfx/weiwen/" and suffixed with ".png">}
+
+NPC functions:
+
+You can use global storage values for your NPCs.
+GLOBAL.varname
+e.g.
+GLOBAL.NPC13
+
+All values in GLOBAL table are saved on server saves.
+
+example NPC function.
+if not GLOBAL.NPC13 then
+	GLOBAL.NPC13 = 0
+end
+NPCs[13].func = function(npc, id, words, state)
+	if words == "hi" then
+		NPCspeak(npc, "Care for a gamble? I'll roll a dice and if you get what you chose, you'll win 6 fold.")
+		PLAYERS[id].tmp.npcstate = {npc, 1}
+	elseif contains(words, "bye") then
+		NPCspeak(npc, "Oh, you don't want to win?")
+		PLAYERS[id].tmp.npcstate = nil
+	elseif PLAYERS[id].tmp.npcstate == 3 or PLAYERS[id].tmp.dice then
+		local number = tonumber(words)
+		if number == 1 or number == 2 or number == 3 or number == 4 or number == 5 or number == 6 then
+			local random = math.random(6)
+			if random == number then
+				local earning = PLAYERS[id].tmp.dice*6
+				addmoney(id, earning)
+				GLOBAL.NPC13 = GLOBAL.NPC13 - earning
+				message(id, "You have recieved $" .. earning .. ".", "255255255")
+				NPCspeak(npc, "You rolled a " .. random .. ". You won! Here's $" .. earning .. " as the prize.")
+			else
+				NPCspeak(npc, "You rolled a " .. random .. ". You lost. How about trying again?")
+			end
+			PLAYERS[id].tmp.npcstate = {npc, 1}
+			PLAYERS[id].tmp.dice = nil
+		else
+			NPCspeak(npc, "Pick a number from 1-6!")
+		end
+	elseif state == 1 then
+		if contains(words, "yes") or contains(words, "gamble") or contains(words, "bet") then
+			NPCspeak(npc, "How much do you want to bet?")
+			PLAYERS[id].tmp.npcstate = {npc, 2}
+		elseif contains(words, "no") then
+			NPCspeak(npc, "Oh, you don't want to win?")
+		elseif contains(words, "earning") or contains(words, "money") then
+			NPCspeak(npc, "I have $" .. GLOBAL.NPC13 .. " currently.")
+		end
+	elseif state == 2 then
+		local bet = tonumber(words)
+		if bet and bet >= 1 then
+			bet = math.floor(bet)
+			if addmoney(id, -bet) then
+				GLOBAL.NPC13 = GLOBAL.NPC13 + bet
+				message(id, "You have lost $" .. bet .. ".", "255255255")
+				PLAYERS[id].tmp.dice = bet
+				NPCspeak(npc, "You'll win $" .. bet*6 .. " if you pick the correct number! Pick a number from 1-6!")
+				PLAYERS[id].tmp.npcstate = {npc, 3}
+			else
+				NPCspeak(npc, "You don't have that much money!")
+				PLAYERS[id].tmp.npcstate = {npc, 1}
+			end
+		else
+			NPCspeak(npc, "You can't bet that!")
+			PLAYERS[id].tmp.npcstate = {npc, 1}
+		end
+	end
+end
+
+HOUSES
+For house areas, they have to be rectangular.
+Fill in the house areas in config.lua
+
+e.g.
+{pos1 = {87,2}, pos2 = {89,5}, ent = {89,6}, door = {89,5}, price = 300, owner = nil, endtime = nil, allow = {}, doors = {[1] = {}}},
+
+pos1 and pos2 are the top left and bottom right of the rectangle respectively.
+ent is tile pos of the tile infront of the door, used to buy the house.
+door is tile pos of the main door of the house.
+price is the price of the house per 24 hours of ownership.
+owner is the default owner of the house. just leave it as nil, for initialisation purposes.
+endtime is the time the house ownership ends, in Unix time.
+allow is the list of allowed players, just leave it as a blank table for initialisation purposes.
+doors is the list of doors as represented in the map.
+e.g. if the name of the door is 12_3, it is door 3 of house 12.
+
+MONSTERS
+mostly self-explanatory
+
+name - name of monster
+health - health of monster
+image - image path of monster
+scalex - x-axis scale of monster
+scaley - y-axis scale of monster
+r, g, b - colour values of blood
+atk - attack value. damage dealt = (source's attack)/(victim's defence)*(raw damage)
+def - defence value. damage dealt = (source's attack)/(victim's defence)*(raw damage)
+spd - speed, in pixels per 100ms
+atkspd - intervals during attacking/using of special attacks, in 100ms
+x, y, ang, imgang - arbitrary value
+runat - runs when health is less than or equal this value
+exp - experience given
+money - money loot dropped, +-50%
+loot - table consisting of chance (max is 10000) and id (item id)
+spawn - a table that contains a table named as the map that contains the top left and bottom right corners of one or many rectangular area(s) for spawning of monster
+spawnchance - a table that contains a table named as the map that contains the chance of spawning for each area, in %
+	note: the spawnchance for them are not very intuitive, so spawnchance of {5, 20} will result in (5+20)/2 = 12.5 instead of 25. (if my maths is correct)
+spc - function for special attack parameters are (self, id, dist) self is the table consisting of itself, id is the target id, dist is the distance from target.
+
+e.g.
+{
+	name = 'Sandshrew', health = 100, image = 'gfx/weiwen/pokemon/27.png', scalex = 2, scaley = 2, 
+	atk = 1.7, def = 2.1, spd = 7, atkspd = 7, x = 0, y = 0, ang = 0, imgang = 0, runat = 10, 
+	spawnchance = {['rpg_mapb'] = {5, 20}}, 
+	spawn = {
+		['rpg_mapb'] = {SPAWNS.BOTTOMHALF, SPAWNS.ONIXCAVE}
+	}, 
+	exp = 18, money = 120, loot = {}, 
+	spc = {1000, function(self) 
+		radiusmsg("Sandshrew uses sand attack!", self.x, self.y)
+		parse('flashposition ' .. self.x .. ' ' .. self.y .. ' 100')
+	end},
+},
+]]
